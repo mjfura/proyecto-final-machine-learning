@@ -1,0 +1,1 @@
+## Esta carpeta será usada para gestionar el proyecto final de aprendizaje no supervizado
