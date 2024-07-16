@@ -1,5 +1,13 @@
+# INSTALAR LIBRERIAS
+install.packages("tm")
+# !INSTALAR LIBRERIAS
 # CARGAR LIBRERIAS
 library(ggplot2)
+library(tm)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
 
 # !CARGAR LIBRERIAS
 
@@ -54,3 +62,55 @@ mostrar_distribucion_sentimientos(dataset_tweets, dataset_tweets$time_of_tweet, 
 mostrar_distribucion_sentimientos(dataset_tweets, dataset_tweets$Country, "Países")
 mostrar_distribucion_sentimientos(dataset_tweets, dataset_tweets$age_user, "Edad del usuario")
 # !ANÁLISIS EXPLORATORIO DE DATOS
+
+# VECTORIZACION
+
+
+removeURL <- function(x) gsub("http\\S+|www\\.\\S+", "", x)
+get_corpus <- function(dataset) {
+    corpus <- VCorpus(VectorSource(dataset$text))
+    corpus <- tm_map(corpus, content_transformer(removeURL))
+    corpus <- tm_map(corpus, content_transformer(tolower))
+    corpus <- tm_map(corpus, removePunctuation)
+    corpus <- tm_map(corpus, removeNumbers)
+    corpus <- tm_map(corpus, removeWords, stopwords("en"))
+    return(corpus)
+}
+dataset_tweets$text <- iconv(dataset_tweets$text, to = "UTF-8")
+dataset_tweets$text
+corpus <- get_corpus(dataset_tweets)
+inspect(corpus[[6]])
+dtm <- DocumentTermMatrix(corpus, control = list(bounds = list(global = c(5, Inf))))
+dtm_tfidf <- weightTfIdf(dtm)
+
+terminos_entrenamiento <- Terms(dtm_tfidf)
+dtm_matrix <- as.matrix(dtm_tfidf)
+dim(dtm_matrix)
+dim(dataset_tweets)
+set.seed(123)
+ind <- splitTools::partition(dataset_tweets$sentiment, p = c(0.8, 0.2))
+train_x <- dtm_matrix[ind$`1`, ]
+train_y <- dataset_tweets[ind$`1`, ]$sentiment
+valid_x <- dtm_matrix[ind$`2`, ]
+valid_y <- dataset_tweets[ind$`2`, ]$sentiment
+length(train_y)
+dim(train_x)
+# !VECTORIZACION
+
+# MODELO ARBOL DE DECISION
+modelo_arbol <- rpart(formula = as.factor(train_y) ~ ., data = as.data.frame(train_x), method = "class") 
+rpart.plot(modelo_arbol)
+predictions <- predict(modelo_arbol, as.data.frame(valid_x), type = "class")
+matrix_confusion <- confusionMatrix(predictions, valid_y,mode="everything")
+matrix_confusion
+# !MODELO ARBOL DE DECISION
+
+# MODELO RANDOM FOREST
+df_train_x=as.data.frame(train_x)
+ncol(df_train_x)
+colnames(train_x) <- make.names(colnames(train_x), unique = TRUE)
+modelo_random_forest <- randomForest(as.factor(train_y) ~ ., data = as.data.frame(train_x), ntree = 500)
+predictions <- predict(modelo_random_forest, as.data.frame(valid_x))
+matrix_confusion <- confusionMatrix(predictions, valid_y,mode="everything")
+matrix_confusion
+# !MODELO RANDOM FOREST
