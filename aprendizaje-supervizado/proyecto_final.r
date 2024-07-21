@@ -159,6 +159,7 @@ mostrar_distribucion_sentimientos(data_train, data_train$age_user, "Edad del usu
 
 # !SPLIT DATASET
 # VECTORIZACION TRAIN
+dim(dataset_tweets)
 result <- get_df_vectorizado(train_x)
 train_x_vectorizado <- result$df_vectorizado
 train_vocabulario <- result$vocabulario
