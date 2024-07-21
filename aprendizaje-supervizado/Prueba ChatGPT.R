@@ -1,0 +1,84 @@
+# Instalar y cargar los paquetes necesarios
+# install.packages("tm")
+# install.packages("e1071")
+# install.packages("caret")
+# install.packages("tidyverse")
+
+library(tm)
+library(e1071)
+library(caret)
+library(tidyverse)
+library(SnowballC)
+library(data.table)
+library(Matrix) 
+
+
+setwd("C:/Users/nicol/OneDrive/MIA/Cursos/Aprendizaje Sup/Proyecto de Aplicacion/REPO GITHUB/proyecto-final-machine-learning/aprendizaje-supervizado")
+
+
+# Cargar datos de ejemplo (supongamos que tienes un dataset de opiniones con sentimiento)
+
+
+dataset_path <- "dataset/train.csv"
+df_total <- fread(dataset_path, header = TRUE, sep = ",")
+
+# Keep only the columns "text" and "sentiment"
+df_total <- df_total[, .(text, sentiment)]
+
+
+# Assuming df is your data frame
+data <- df_total[1:5000, ]
+
+
+
+# Preprocesar el texto
+corpus <- Corpus(VectorSource(data$text))
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+corpus <- tm_map(corpus, stripWhitespace)
+
+# Crear la matriz de términos
+dtm <- DocumentTermMatrix(corpus)
+dtm <- as.data.frame(as.matrix(dtm))
+
+# Añadir la columna de sentimiento y convertirla en factor
+dtm$sentiment <- as.factor(data$sentiment)
+
+# Dividir los datos en entrenamiento y prueba
+set.seed(123)
+trainIndex <- createDataPartition(dtm$sentiment, p = 0.8, list = FALSE)
+dataTrain <- dtm[trainIndex, ]
+dataTest <- dtm[-trainIndex, ]
+
+# Entrenar el modelo SVM
+
+
+cost0=c()
+for(j in seq(0.01,2, by=0.05)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = dataTrain, kernel = "linear", cost=j, cross=5)$tot.accuracy)
+}
+
+plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C" )
+abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.01,2, by=0.05)[which.max(cost0)]
+
+
+###############################################
+
+# model <- svm(sentiment ~ ., data = dataTrain, kernel = "linear")
+# 
+# # Hacer predicciones
+# predictions <- predict(model, dataTest)
+# 
+# # Evaluar el modelo
+# confusionMatrix(predictions, dataTest$sentiment)

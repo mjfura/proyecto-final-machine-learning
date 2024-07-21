@@ -1,0 +1,452 @@
+# Install and load the necessary libraries
+# install.packages("tm")
+# install.packages("SnowballC")
+# install.packages("e1071")
+# install.packages("caret")
+# install.packages("data.table")
+
+# Set working directory (adjust to your own path)
+setwd("C:/Users/nicol/OneDrive/MIA/Cursos/Aprendizaje Sup/Proyecto de Aplicacion/REPO GITHUB/proyecto-final-machine-learning/aprendizaje-supervizado")
+
+library(tm)
+library(SnowballC)
+library(e1071)
+library(caret)
+library(data.table)
+library(Matrix)  # For sparse matrix support
+
+#Seleccion de Modelo
+
+
+# Cargar los datos
+dataset_path <- "dataset/train.csv"
+df_total <- fread(dataset_path, header = TRUE, sep = ",")
+
+# Keep only the columns "text" and "sentiment"
+df_total <- df_total[, .(text, sentiment)]
+
+
+# Check the loaded data
+#print(df)
+
+# Assuming df is your data frame
+df <- df_total[1:1000, ]
+
+
+# Preprocess text function
+preprocess_text <- function(text) {
+  text <- tolower(text)
+  text <- removePunctuation(text)
+  text <- removeNumbers(text)
+  text <- removeWords(text, stopwords("en"))
+  text <- wordStem(text, language = "en")  # Stemming using SnowballC
+  text <- stripWhitespace(text)
+  return(text)
+}
+
+# Apply preprocessing
+df[, text := sapply(text, preprocess_text)]
+
+# Create a corpus and DTM
+corpus <- Corpus(VectorSource(df$text))
+dtm <- DocumentTermMatrix(corpus)
+
+# Inspect the DTM to understand its structure and content
+#inspect(dtm[1:10, 1:10])
+
+# Apply TF-IDF weighting to the DTM
+dtm_tfidf <- weightTfIdf(dtm)
+dtm_matrix <- as.matrix(dtm_tfidf)
+
+# View the dimensions of the matrix
+#print(dim(dtm_matrix))
+
+# View the first few rows and columns
+#print(head(dtm_matrix[, 1:10]))  # First 10 columns of the first few rows
+
+# View a summary of the matrix
+#print(summary(dtm_matrix))
+
+# Convert back to data table
+dtm_df <- as.data.table(dtm_matrix)
+dtm_df[, sentiment := factor(df$sentiment)]  # Convert sentiment to factor
+
+# Split data into training and test sets
+set.seed(123)
+trainIndex <- createDataPartition(dtm_df$sentiment, p = 0.9, list = FALSE)
+trainData <- dtm_df[trainIndex]
+testData <- dtm_df[-trainIndex]
+
+# Check data splitting
+#print(table(trainData$sentiment))
+#print(table(testData$sentiment))
+
+# Train SVM model with TF-IDF features
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Modelo 1 Lineal ##
+
+cost0=c()
+for(j in seq(0.01,2, by=0.05)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "linear", cost=j, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C", main="Metodo SVM -  Kernel Lineal" )
+abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.01,2, by=0.05)[which.max(cost0)]
+
+
+
+# Modelo 2 Polynomial ##
+
+###a) Degree 2
+
+cost0=c()
+for(j in seq(0.01,2, by=0.05)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "polynomial", degree=2, cost=j, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C", main=paste("Metodo SVM -  Kernel Polinomial - Grado = " , "2") )
+abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.01,2, by=0.05)[which.max(cost0)]
+
+
+
+###b) Degree 3
+
+cost0=c()
+for(j in seq(0.01,2, by=0.05)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "polynomial", degree=3, cost=j, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C", main=paste("Metodo SVM -  Kernel Polinomial - Grado = " , "3") )
+abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.01,2, by=0.05)[which.max(cost0)]
+
+
+###c) Degree 4
+
+
+
+cost0=c()
+for(j in seq(0.01,2, by=0.05)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "polynomial", degree=4, cost=j, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C", main=paste("Metodo SVM -  Kernel Polinomial - Grado = " , "4") )
+abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.01,2, by=0.05)[which.max(cost0)]
+
+
+
+
+###c) Degree 5
+
+
+
+cost0=c()
+for(j in seq(0.01,2, by=0.05)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "polynomial", degree=5, cost=j, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C", main=paste("Metodo SVM -  Kernel Polinomial - Grado = " , "5") )
+abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.01,2, by=0.05)[which.max(cost0)]
+
+
+
+###c) Degrado variable c cte
+
+
+
+cost0=c()
+for(j in seq(1,10, by=0.5)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "polynomial", degree=j, cost=0.5, cross=10)$tot.accuracy)
+}
+
+plot(seq(1,10, by=0.5),cost0, type="o", pch=20, ylab="Accuracy", xlab= "Grado", main=paste("Metodo SVM -  Kernel Polinomial - Grado " , "Variable / C=0.5") )
+abline(h =cost0[which.max(cost0)], v=seq(1,10, by=0.5)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(1,10, by=0.5)[which.max(cost0)]
+
+
+
+
+#?svm
+
+
+# acc0 <- c()  # Initialize acc0 as an empty vector
+# 
+# for (i in seq(2, 4, by = 1)) {
+#   for (j in seq(0.01, 2, by = 0.05)) {
+#     
+#     # Perform SVM and extract total accuracy
+#     acc <- svm(sentiment ~ ., data = trainData, kernel = "polynomial", degree = i, cost = j, cross = 2)$tot.accuracy
+#     
+#     # Append acc to acc0 vector
+#     acc0 <- c(acc0, acc)
+#     
+#     # Print or use other desired operations (commented out in original code)
+#     # print(which.max(acc0))  # Uncomment if you want to print which index has the maximum accuracy
+#     # print(acc0[which.max(acc0)])  # Uncomment if you want to print the maximum accuracy value
+#     # print(seq(0.01, 2, by = 0.05)[which.max(acc0)])  # Uncomment if you want to print the corresponding value of C
+#     
+#   }
+# }
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# acc0=c()
+# for(i in seq(2,4, by=1)) {
+#     for(j in seq(0.01,2, by=0.05)) {
+# 
+#     acc0=cbind(acc0, svm(sentiment ~ ., data = trainData, kernel = "polynomial", degree=i, cost=j, cross=2)$tot.accuracy)
+#     
+#     #plot(seq(0.01,2, by=0.05),acc0, type="o", pch=20, ylab="Accuracy", xlab= "Cost", main=paste("Metodo SVM -  Kernel Polinomial d = ", "2") )
+#     #abline(h =acc0[which.max(acc0)], v=seq(0.01,2, by=0.05)[which.max(acc0)], lty=2, col=2)
+#     
+#     which.max(acc0)
+#     
+#     #Accuracy
+#     acc0[which.max(acc0)]
+#     
+#     #Valor de C
+#     seq(0.01,2, by=0.05)[which.max(acc0)]
+#   }
+# }
+# 
+# 
+# 
+# 
+# which.max(acc0)
+# 
+# #Accuracy
+# acc0[which.max(acc0)]
+# 
+# #Valor de C
+# seq(1,10, by=0.1)[which.max(acc0)]
+# 
+
+# Modelo 3 Radial
+
+cost0=c()
+for(j in seq(0.01,2, by=0.05)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "radial", cost=j, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C", main="Metodo SVM -  Kernel Radial" )
+abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.01,2, by=0.05)[which.max(cost0)]
+
+
+
+######
+
+cost0=c()
+for(j in seq(0.0001,0.002, by=0.0001)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "radial", gamma= j, cost=0.5, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.0001,0.002, by=0.0001),cost0, type="o", pch=20, ylab="Accuracy", xlab= "Gamma", main="Metodo SVM -  Kernel Radial - Gamma Variable/ c=0.5" )
+abline(h =cost0[which.max(cost0)], v=seq(0.0001,0.002, by=0.0001)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.0001,0.002, by=0.0001)[which.max(cost0)]
+
+
+
+
+
+
+
+# Modelo 4
+
+cost0=c()
+for(j in seq(0.01,2, by=0.05)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "sigmoid", cost=j, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C", main="Metodo SVM -  Kernel Sigmoide" )
+abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.01,2, by=0.05)[which.max(cost0)]
+
+
+
+######
+
+cost0=c()
+for(j in seq(0.0001,0.002, by=0.0001)) {
+  cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "sigmoid", gamma= j, cost=0.5, cross=10)$tot.accuracy)
+}
+
+plot(seq(0.0001,0.002, by=0.0001),cost0, type="o", pch=20, ylab="Accuracy", xlab= "Gamma", main="Metodo SVM -  Kernel Sigmoideo - Gamma Variable/ c=0.5" )
+abline(h =cost0[which.max(cost0)], v=seq(0.0001,0.002, by=0.0001)[which.max(cost0)], lty=2, col=2)
+
+
+which.max(cost0)
+
+#Accuracy
+cost0[which.max(cost0)]
+
+#Valor de C
+seq(0.0001,0.002, by=0.0001)[which.max(cost0)]
+
+
+
+
+
+
+
+
+
+
+
+# 
+# cost0=c()
+# for(j in seq(0.01,2, by=0.05)) {
+#   cost0=cbind(cost0, svm(sentiment ~ ., data = trainData, kernel = "sigmoid", cost=j, cross=10)$tot.accuracy)
+# }
+# 
+# plot(seq(0.01,2, by=0.05),cost0, type="o", pch=20, ylab="Accuracy", xlab= "C", main="Metodo SVM -  Kernel Sigmoide" )
+# abline(h =cost0[which.max(cost0)], v=seq(0.01,2, by=0.05)[which.max(cost0)], lty=2, col=2)
+# 
+# 
+# which.max(cost0)
+# 
+# #Accuracy
+# cost0[which.max(cost0)]
+# 
+# #Valor de C
+# seq(0.01,2, by=0.05)[which.max(cost0)]
+# 
+# 
+
+
+
+#svm_model1 <- svm(sentiment ~ ., data = trainData, kernel = "linear", cost = 1, scale = FALSE)
+#  
+# 
+# 
+# 
+# # svm_model2 <- svm(sentiment ~ ., data = trainData, kernel = "linear", cost = 0.1, scale = FALSE)
+# # 
+# # svm_model3 <- svm(sentiment ~ ., data = trainData, kernel = "linear", cost = 0.1, scale = FALSE)
+# # 
+# # svm_model4 <- svm(sentiment ~ ., data = trainData, kernel = "linear", cost = 0.1, scale = FALSE)
+# 
+# 
+# 
+# 
+# 
+# 
+# Predict and evaluate
+
+# print("modelo1")
+# predictions <- predict(svm_model1, newdata = testData)
+# print(table(predictions, testData$sentiment))
+# confusionMatrix(predictions, testData$sentiment)
+
+# # print("modelo2")
+# # predictions <- predict(svm_model2, newdata = testData)
+# # print(table(predictions, testData$sentiment))
+# # confusionMatrix(predictions, testData$sentiment)
+# 
+# print("modelo3")
+# predictions <- predict(svm_model3, newdata = testData)
+# print(table(predictions, testData$sentiment))
+# confusionMatrix(predictions, testData$sentiment)
+# 
+# print("modelo4")
+# predictions <- predict(svm_model4, newdata = testData)
+# print(table(predictions, testData$sentiment))
+# confusionMatrix(predictions, testData$sentiment)
